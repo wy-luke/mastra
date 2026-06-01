@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { TooltipProvider } from '../Tooltip';
 import { CodeBlock } from './code-block';
@@ -37,6 +37,27 @@ const commands: Record<string, string> = {
   yarn: 'yarn add @mastra/core@latest @mastra/memory@latest mastra@latest',
   bun: 'bun add @mastra/core@latest @mastra/memory@latest mastra@latest',
 };
+
+const lightVsDarkCode = `import { Agent } from '@mastra/core/agent';
+
+export const agent = new Agent({
+  name: 'support-agent',
+  model: '__GATEWAY_OPENAI_MODEL__',
+});`;
+
+function useLightStoryRoot() {
+  useEffect(() => {
+    const root = document.documentElement;
+    const previousClassName = root.className;
+
+    root.classList.remove('dark');
+    root.classList.add('light');
+
+    return () => {
+      root.className = previousClassName;
+    };
+  }, []);
+}
 
 export const Default: Story = {
   render: () => <CodeBlock code="pnpm dlx mastra@latest init" />,
@@ -138,6 +159,25 @@ export const Highlighted: Story = {
         value={provider}
         onValueChange={setProvider}
       />
+    );
+  },
+};
+
+export const LightVsDark: Story = {
+  render: () => {
+    useLightStoryRoot();
+
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <p className="mb-2 text-ui-sm text-neutral3">Light</p>
+          <CodeBlock code={lightVsDarkCode} lang="typescript" fileName="src/mastra/agents/index.ts" />
+        </div>
+        <div className="dark">
+          <p className="mb-2 text-ui-sm text-neutral3">Dark</p>
+          <CodeBlock code={lightVsDarkCode} lang="typescript" fileName="src/mastra/agents/index.ts" />
+        </div>
+      </div>
     );
   },
 };

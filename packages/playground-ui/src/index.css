@@ -396,6 +396,13 @@ html.light {
   }
 }
 
+@theme inline {
+  --color-shiki-light: var(--shiki-light);
+  --color-shiki-dark: var(--shiki-dark);
+  --color-shiki-light-bg: var(--shiki-light-bg);
+  --color-shiki-dark-bg: var(--shiki-dark-bg);
+}
+
 @layer base {
   * {
     border-color: var(--border1);

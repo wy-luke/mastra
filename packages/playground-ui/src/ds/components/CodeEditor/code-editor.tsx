@@ -11,6 +11,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { forwardRef, useMemo } from 'react';
 import type { HTMLAttributes } from 'react';
+import type { ThemedToken } from 'shiki';
 import { createVariableAutocomplete } from './variable-autocomplete-extension';
 import { variableHighlight } from './variable-highlight-extension';
 import { CopyButton } from '@/ds/components/CopyButton';
@@ -316,7 +317,7 @@ export async function highlight(code: string, language: string) {
 
   if (!(language in bundledLanguages)) return null;
 
-  const { tokens } = await codeToTokens(code, {
+  const { tokens, rootStyle } = await codeToTokens(code, {
     lang: language as keyof typeof bundledLanguages,
     defaultColor: false,
     themes: {
@@ -325,5 +326,47 @@ export async function highlight(code: string, language: string) {
     },
   });
 
-  return tokens;
+  return withRootBackgroundVars(tokens, rootStyle);
+}
+
+function withRootBackgroundVars(tokens: ThemedToken[][], rootStyle?: string): ThemedToken[][] {
+  const backgroundVars = getShikiBackgroundVars(rootStyle);
+
+  if (!Object.keys(backgroundVars).length) {
+    return tokens;
+  }
+
+  return tokens.map(line =>
+    line.map(token => {
+      if (!token.htmlStyle || typeof token.htmlStyle === 'string') {
+        return token;
+      }
+
+      return {
+        ...token,
+        htmlStyle: {
+          ...backgroundVars,
+          ...token.htmlStyle,
+        },
+      };
+    }),
+  );
+}
+
+function getShikiBackgroundVars(rootStyle?: string): Partial<Record<'--shiki-light-bg' | '--shiki-dark-bg', string>> {
+  if (!rootStyle) {
+    return {};
+  }
+
+  const vars: Record<string, string> = {};
+
+  for (const declaration of rootStyle.split(';')) {
+    const [name, value] = declaration.split(':');
+
+    if ((name === '--shiki-light-bg' || name === '--shiki-dark-bg') && value) {
+      vars[name] = value.trim();
+    }
+  }
+
+  return vars;
 }

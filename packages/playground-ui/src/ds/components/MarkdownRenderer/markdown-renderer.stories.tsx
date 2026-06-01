@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { useEffect } from 'react';
 import { TooltipProvider } from '../Tooltip';
 import { MarkdownRenderer } from './markdown-renderer';
 
@@ -21,6 +22,39 @@ const meta: Meta<typeof MarkdownRenderer> = {
 
 export default meta;
 type Story = StoryObj<typeof MarkdownRenderer>;
+
+const codeBlocksMarkdown = `Here's an inline \`code\` example.
+
+\`\`\`javascript
+const agent = new Agent({
+  name: 'MyAgent',
+  model: '__GATEWAY_OPENAI_MODEL__',
+  temperature: 0.7,
+});
+
+await agent.run('Hello, world!');
+\`\`\`
+
+And here's some Python:
+
+\`\`\`python
+def greet(name):
+    return f"Hello, {name}!"
+\`\`\``;
+
+function useLightStoryRoot() {
+  useEffect(() => {
+    const root = document.documentElement;
+    const previousClassName = root.className;
+
+    root.classList.remove('dark');
+    root.classList.add('light');
+
+    return () => {
+      root.className = previousClassName;
+    };
+  }, []);
+}
 
 export const Default: Story = {
   args: {
@@ -56,24 +90,26 @@ export const Lists: Story = {
 
 export const CodeBlocks: Story = {
   args: {
-    children: `Here's an inline \`code\` example.
+    children: codeBlocksMarkdown,
+  },
+};
 
-\`\`\`javascript
-const agent = new Agent({
-  name: 'MyAgent',
-  model: 'gpt-4',
-  temperature: 0.7,
-});
+export const LightVsDark: Story = {
+  render: () => {
+    useLightStoryRoot();
 
-await agent.run('Hello, world!');
-\`\`\`
-
-And here's some Python:
-
-\`\`\`python
-def greet(name):
-    return f"Hello, {name}!"
-\`\`\``,
+    return (
+      <div className="grid gap-6 md:grid-cols-2">
+        <div>
+          <p className="mb-3 text-ui-sm text-neutral3">Light</p>
+          <MarkdownRenderer>{codeBlocksMarkdown}</MarkdownRenderer>
+        </div>
+        <div className="dark">
+          <p className="mb-3 text-ui-sm text-neutral3">Dark</p>
+          <MarkdownRenderer>{codeBlocksMarkdown}</MarkdownRenderer>
+        </div>
+      </div>
+    );
   },
 };
 
